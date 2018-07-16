@@ -36,7 +36,7 @@ int RunPelotonServer() {
     peloton_server.SetupServer().ServerLoop();
   } catch (peloton::ConnectionException &exception) {
     //log error message and mark failure
-    peloton::LOG_ERROR("Cannot start server. Failure detail : %s\n", exception.GetMessage().c_str());
+    LOG_ERROR("Cannot start server. Failure detail : %s\n", exception.GetMessage().c_str());
     return_code = EXIT_FAILURE;
   }
 
@@ -80,6 +80,9 @@ int main(int argc, char *argv[]) {
     ::google::HandleCommandLineHelpFlags();
   }
 
+  // initialize logger
+  peloton::Logger::InitializeLogger();
+
   try {
     // Print settings
     if (peloton::settings::SettingsManager::GetBool(
@@ -88,7 +91,7 @@ int main(int argc, char *argv[]) {
       settings.ShowInfo();
     }
   } catch (peloton::SettingsException &exception) {
-    peloton::LOG_ERROR("Cannot load settings. Failed with %s\n", exception.GetMessage().c_str());
+    LOG_ERROR("Cannot load settings. Failed with %s\n", exception.GetMessage().c_str());
     return EXIT_FAILURE; // TODO: Use an enum with exit error codes
   }
 

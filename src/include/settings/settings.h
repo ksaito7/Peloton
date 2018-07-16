@@ -15,6 +15,42 @@
 //===----------------------------------------------------------------------===//
 
 //===----------------------------------------------------------------------===//
+// PELOTON LOGGER
+//===----------------------------------------------------------------------===//
+
+// log level
+// if debug mode, default log level is DEBUG, otherwise INFO
+SETTING_string(log_level,
+#ifndef NDEBUG
+              "Peloton log Level for Peloton logger (default: DEBUG)"
+                 ": ERROR, WARN, INFO, DEBUG, TRACE",
+              "DEBUG",
+#else
+              "Peloton log Level for Peloton logger (default: INFO)"
+                 ": ERROR, WARN, INFO, DEBUG, TRACE",
+              "INFO"
+#endif
+              false, false)
+
+// logging to standard output
+SETTING_bool(log_to_standard_output,
+             "Enable to write Peloton log to standard output (default: true)",
+             true,
+             false, false)
+
+// logging to file
+SETTING_bool(log_to_file,
+             "Enable to write Peloton log to file (defualt: false)",
+             false,
+             false, false)
+
+// log file path in logging to file
+SETTING_string(log_file_path,
+               "Peloton log file path (default: ./peloton.log)",
+               "./peloton.log",
+               false, false)
+
+//===----------------------------------------------------------------------===//
 // CONNECTIONS
 //===----------------------------------------------------------------------===//
 // Peloton port

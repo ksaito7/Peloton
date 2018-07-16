@@ -75,6 +75,22 @@ extern int TEST_TUPLES_PER_TILEGROUP;
 #define VARCHAR_LENGTH_LONG 4096
 
 //===--------------------------------------------------------------------===//
+// Peloton Logger
+//===--------------------------------------------------------------------===//
+enum class PelotonLogLevel {
+  INVALID = 0,
+  ERROR,
+  WARN,
+  INFO,
+  DEBUG,
+  TRACE,
+};
+
+std::string PelotonLogLevelToString(PelotonLogLevel log_level);
+PelotonLogLevel StringToPelotonLogLevel(const std::string &str);
+std::ostream &operator<<(std::ostream &os, const PelotonLogLevel &log_level);
+
+//===--------------------------------------------------------------------===//
 // Comparison Result
 // This is used when comparing values with each other
 //===--------------------------------------------------------------------===//

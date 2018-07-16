@@ -14,12 +14,23 @@
 
 /**
  * Debug logging functions for EE. Unlike the performance counters,
- * these are just fprintf() turned on/off by LOG_LEVEL compile option.
+ * these are just StringUtil::Format() turned on/off by LOG_LEVEL compile option.
  * The main concern here is not to add any overhead on runtime performance
  * when the logging is turned off. Use LOG_XXX_ENABLED macros defined here to
  * eliminate all instructions in the final binary.
  * @author Hideaki
 */
+
+/**
+ * To be more useful debugging, added command arguments for Peloton server
+ * to control log levels on runtime. Note that the log level disabled by compile
+ * option doesn't work on runtime even if enables the log level on runtime.
+ *   e.g.) compiled with -DLOG_LEVEL=LOG_LEVEL_DEBUG
+ *          => ./peloton -log_level=TRACE  =>  LOG_TRACE() is never called
+ */
+
+#include "easylogging++/easylogging++.h"
+#include "util/string_util.h"
 
 #include <ctime>
 #include <string>
@@ -30,12 +41,10 @@
 #endif 
 #include <inttypes.h>
 
-namespace peloton {
-
 // Note that __PELOTONFILE__ is a special pre-processor macro that we
 // generate for shorter path names using CMake.
 
-// Log levels.
+// Log levels for compile option.
 #define LOG_LEVEL_OFF 1000
 #define LOG_LEVEL_ERROR 500
 #define LOG_LEVEL_WARN 400
@@ -44,31 +53,23 @@ namespace peloton {
 #define LOG_LEVEL_TRACE 100
 #define LOG_LEVEL_ALL 0
 
-#define LOG_LOG_TIME_FORMAT "%Y-%m-%d %H:%M:%S"
-#define LOG_OUTPUT_STREAM stdout
-
 // Compile Option
 #ifndef LOG_LEVEL
 // TODO : any way to use pragma message in GCC?
 //#pragma message("Warning: LOG_LEVEL compile option was not explicitly
 // given.")
 #ifndef NDEBUG
-//#pragma message("LOG_LEVEL_DEBUG is used instead as DEBUG option is on.")
-#define LOG_LEVEL LOG_LEVEL_DEBUG
+// In debug mode, all log macros are usable.
+#define LOG_LEVEL LOG_LEVEL_ALL
 #else
-//#pragma message("LOG_LEVEL_WARN is used instead as DEBUG option is off.")
 #define LOG_LEVEL LOG_LEVEL_INFO
 #endif
-//#pragma message("Give LOG_LEVEL compile option to overwrite the default
-// level.")
 #endif
 
 // For compilers which do not support __FUNCTION__
 #if !defined(__FUNCTION__) && !defined(__GNUC__)
 #define __FUNCTION__ ""
 #endif
-
-void outputLogHeader_(const char *file, int line, const char *func, int level);
 
 // Two convenient macros for debugging
 // 1. Logging macros.
@@ -79,12 +80,7 @@ void outputLogHeader_(const char *file, int line, const char *func, int level);
 #endif
 #if LOG_LEVEL <= LOG_LEVEL_ERROR
 #define LOG_ERROR_ENABLED
-//#pragma message("LOG_ERROR was enabled.")
-#define LOG_ERROR(...)                                                        \
-  outputLogHeader_(__PELOTONFILE__, __LINE__, __FUNCTION__, LOG_LEVEL_ERROR); \
-  ::fprintf(LOG_OUTPUT_STREAM, __VA_ARGS__);                                  \
-  fprintf(LOG_OUTPUT_STREAM, "\n");                                           \
-  ::fflush(stdout)
+#define LOG_ERROR(...) CLOG(ERROR, PELOTON_LOGGER_NAME) << peloton::StringUtil::Format(__VA_ARGS__);
 #else
 #define LOG_ERROR(...) ((void)0)
 #endif
@@ -94,12 +90,7 @@ void outputLogHeader_(const char *file, int line, const char *func, int level);
 #endif
 #if LOG_LEVEL <= LOG_LEVEL_WARN
 #define LOG_WARN_ENABLED
-//#pragma message("LOG_WARN was enabled.")
-#define LOG_WARN(...)                                                        \
-  outputLogHeader_(__PELOTONFILE__, __LINE__, __FUNCTION__, LOG_LEVEL_WARN); \
-  ::fprintf(LOG_OUTPUT_STREAM, __VA_ARGS__);                                 \
-  fprintf(LOG_OUTPUT_STREAM, "\n");                                          \
-  ::fflush(stdout)
+#define LOG_WARN(...) CLOG(WARNING, PELOTON_LOGGER_NAME) << peloton::StringUtil::Format(__VA_ARGS__);
 #else
 #define LOG_WARN(...) ((void)0)
 #endif
@@ -109,12 +100,7 @@ void outputLogHeader_(const char *file, int line, const char *func, int level);
 #endif
 #if LOG_LEVEL <= LOG_LEVEL_INFO
 #define LOG_INFO_ENABLED
-//#pragma message("LOG_INFO was enabled.")
-#define LOG_INFO(...)                                                        \
-  outputLogHeader_(__PELOTONFILE__, __LINE__, __FUNCTION__, LOG_LEVEL_INFO); \
-  ::fprintf(LOG_OUTPUT_STREAM, __VA_ARGS__);                                 \
-  fprintf(LOG_OUTPUT_STREAM, "\n");                                          \
-  ::fflush(stdout)
+#define LOG_INFO(...) CLOG(INFO, PELOTON_LOGGER_NAME) << peloton::StringUtil::Format(__VA_ARGS__);
 #else
 #define LOG_INFO(...) ((void)0)
 #endif
@@ -124,12 +110,7 @@ void outputLogHeader_(const char *file, int line, const char *func, int level);
 #endif
 #if LOG_LEVEL <= LOG_LEVEL_DEBUG
 #define LOG_DEBUG_ENABLED
-//#pragma message("LOG_DEBUG was enabled.")
-#define LOG_DEBUG(...)                                                        \
-  outputLogHeader_(__PELOTONFILE__, __LINE__, __FUNCTION__, LOG_LEVEL_DEBUG); \
-  ::fprintf(LOG_OUTPUT_STREAM, __VA_ARGS__);                                  \
-  fprintf(LOG_OUTPUT_STREAM, "\n");                                           \
-  ::fflush(stdout)
+#define LOG_DEBUG(...) CLOG(DEBUG, PELOTON_LOGGER_NAME) << peloton::StringUtil::Format(__VA_ARGS__);
 #else
 #define LOG_DEBUG(...) ((void)0)
 #endif
@@ -139,50 +120,23 @@ void outputLogHeader_(const char *file, int line, const char *func, int level);
 #endif
 #if LOG_LEVEL <= LOG_LEVEL_TRACE
 #define LOG_TRACE_ENABLED
-//#pragma message("LOG_TRACE was enabled.")
-#define LOG_TRACE(...)                                                        \
-  outputLogHeader_(__PELOTONFILE__, __LINE__, __FUNCTION__, LOG_LEVEL_TRACE); \
-  ::fprintf(LOG_OUTPUT_STREAM, __VA_ARGS__);                                  \
-  fprintf(LOG_OUTPUT_STREAM, "\n");                                           \
-  ::fflush(stdout)
+#define LOG_TRACE(...) CLOG(TRACE, PELOTON_LOGGER_NAME) << peloton::StringUtil::Format(__VA_ARGS__);
 #else
 #define LOG_TRACE(...) ((void)0)
 #endif
 
-// Output log message header in this format: [type] [file:line:function] time -
-// ex: [ERROR] [somefile.cpp:123:doSome()] 2008/07/06 10:00:00 -
-inline void outputLogHeader_(const char *file, int line, const char *func,
-                             int level) {
-  time_t t = ::time(NULL);
-  tm *curTime = localtime(&t);
-  char time_str[32];  // FIXME
-  ::strftime(time_str, 32, LOG_LOG_TIME_FORMAT, curTime);
-  const char *type;
-  switch (level) {
-    case LOG_LEVEL_ERROR:
-      type = "ERROR";
-      break;
-    case LOG_LEVEL_WARN:
-      type = "WARN ";
-      break;
-    case LOG_LEVEL_INFO:
-      type = "INFO ";
-      break;
-    case LOG_LEVEL_DEBUG:
-      type = "DEBUG";
-      break;
-    case LOG_LEVEL_TRACE:
-      type = "TRACE";
-      break;
-    default:
-      type = "UNKWN";
-  }
-  // PAVLO: DO NOT CHANGE THIS
-  ::fprintf(LOG_OUTPUT_STREAM, "%s [%s:%d:%s] %s - ",
-            time_str,
-            file, line, func,
-            type);
-}
+
+namespace peloton {
+
+// Macros for logger initialization
+#define PELOTON_LOGGER_NAME "peloton"
+#define PELOTON_LOG_FORMAT "%datetime [%file:%line] %level - %msg"
+#define PELOTON_LOG_FLUSH_THERESHOLD "1"
+
+class Logger {
+ public:
+  static void InitializeLogger();
+};
 
 }  // namespace peloton
 

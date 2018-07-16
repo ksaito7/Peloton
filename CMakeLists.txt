@@ -98,6 +98,10 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_C99=1 -D_GLIBCXX_USE_C99_MATH=1")
 endif()
 
+# -- [ Define macros for Easylogging++
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DELPP_THREAD_SAFE -DELPP_NO_DEFAULT_LOG_FILE")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DELPP_THREAD_SAFE -DELPP_NO_DEFAULT_LOG_FILE")
+
 # ---[ Warnings
 peloton_warnings_disable(CMAKE_CXX_FLAGS -Wno-strict-aliasing -Wno-implicit-fallthrough)
 

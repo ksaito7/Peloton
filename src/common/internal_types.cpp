@@ -39,6 +39,58 @@ size_t GC_THREAD_COUNT = 1;
 size_t EPOCH_THREAD_COUNT = 1;
 
 //===--------------------------------------------------------------------===//
+// Peloton Logger
+//===--------------------------------------------------------------------===//
+
+std::string PelotonLogLevelToString(PelotonLogLevel log_level) {
+  switch (log_level) {
+    case PelotonLogLevel::INVALID:
+      return "INVALID";
+    case PelotonLogLevel::ERROR:
+      return "ERROR";
+    case PelotonLogLevel::WARN:
+      return "WARN";
+    case PelotonLogLevel::INFO:
+      return "INFO";
+    case PelotonLogLevel::DEBUG:
+      return "DEBUG";
+    case PelotonLogLevel::TRACE:
+      return "TRACE";
+    default: {
+      throw ConversionException(
+          StringUtil::Format("No string conversion for PelotonLogLevel value '%d'",
+                             static_cast<int>(log_level)));
+    }
+  }
+  return ("INVALID");
+}
+
+PelotonLogLevel StringToPelotonLogLevel(const std::string &str) {
+  std::string upper_str = StringUtil::Upper(str);
+  if (upper_str == "INVALID") {
+    return PelotonLogLevel::INVALID;
+  } else if (upper_str == "ERROR") {
+    return PelotonLogLevel::ERROR;
+  } else if (upper_str == "WARN") {
+    return PelotonLogLevel::WARN;
+  } else if (upper_str == "INFO") {
+    return PelotonLogLevel::INFO;
+  } else if (upper_str == "DEBUG") {
+    return PelotonLogLevel::DEBUG;
+  } else if (upper_str == "TRACE") {
+    return PelotonLogLevel::TRACE;
+  } else {
+    throw ConversionException(StringUtil::Format(
+        "No Peloton log level conversion from string '%s'", upper_str.c_str()));
+  }
+}
+
+std::ostream &operator<<(std::ostream &os, const PelotonLogLevel &log_level) {
+  os << PelotonLogLevelToString(log_level);
+  return os;
+}
+
+//===--------------------------------------------------------------------===//
 // DatePart <--> String Utilities
 //===--------------------------------------------------------------------===//
 std::string DatePartTypeToString(DatePartType type) {

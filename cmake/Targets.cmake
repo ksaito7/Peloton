@@ -91,6 +91,9 @@ function(peloton_pickup_peloton_sources root)
   # ART
   file(GLOB_RECURSE art_srcs ${root}/third_party/adaptive_radix_tree/*.cpp)
 
+  # Easylogging++
+  file(GLOB_RECURSE el_srcs ${root}/third_party/easylogging++/*.cc)
+
   # date
   file(GLOB_RECURSE jsoncpp_srcs ${root}/third_party/date/*.cpp)
   set(date_hdrs ${root}/third_party/date/)
@@ -102,7 +105,7 @@ function(peloton_pickup_peloton_sources root)
 
   # add proto to make them editable in IDEs too
   file(GLOB_RECURSE proto_files ${root}/src/peloton/*.proto)
-  list(APPEND srcs ${proto_files} ${murmur_srcs} ${libcount_srcs} ${art_srcs} ${jsoncpp_srcs})
+  list(APPEND srcs ${proto_files} ${murmur_srcs} ${libcount_srcs} ${art_srcs} ${el_srcs} ${jsoncpp_srcs})
 
   # propogate to parent scope
   set(srcs ${srcs} PARENT_SCOPE)
